@@ -5,7 +5,7 @@
   "keywords": [
     "ember-addon"
   ],
-  "main": "src/index.js",
+  "main": "lib/index.js",
   "dyfactor": {
     "name": "ember-object",
     "type": "template",
@@ -22,7 +22,6 @@
     "test": "tests"
   },
   "scripts": {
-    "prepublish": "babel lib -d src",
     "build": "ember build",
     "lint:hbs": "ember-template-lint .",
     "lint:js": "eslint .",
