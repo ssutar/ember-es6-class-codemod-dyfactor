@@ -2,10 +2,24 @@ import require from "require";
 import Ember from "ember";
 
 /* global requirejs */
-const DYFACTOR_BASE_PATH = "__dyfactor_base_path__";
 
+// Dyfctor globals
+const DYFACTOR_BASE_PATH = "__dyfactor_base_path__";
 window.__dyfactor_telemetry = {};
 
+/**
+ * Entry point of the utility - should be included in the test-helper.js after all the dependencies are fetched
+ *
+ * For example, in you test-helper.js
+ * ------------------------------------------------------------------------------------
+ * import { extract } from "ember-es6-class-codemod-dyfactor/test-support/ember-object";
+ *
+ * // Do all the dependency prefetch, load the engines pre-emptively
+ * // Call the extract method to trigger the flow
+ *
+ * extract();
+ * ------------------------------------------------------------------------------------
+ */
 function extract() {
   const entries = requirejs.entries;
   Object.keys(entries).forEach(modulePath => {
@@ -33,6 +47,7 @@ function extract() {
  * Compares the object with types of Ember objects
  *
  * @param {Object} object
+ * @returns {String} type
  */
 function getType(object) {
   const types = [
@@ -51,20 +66,19 @@ function getType(object) {
 }
 
 /**
- * Parses ember meta data object and collects the runtime information in the following format
- *
- * {
- *  computedProperties: []:String,
- *  observedProperties: []:String,
- *  observerProperties: []:String,
- *  offProperties: []:String,
- *  overriddenProperties: []:String,
- *  ownProperties: []:String,
- *  type: String,
- *  unobservedProperties: []:String
- * }
+ * Parses ember meta data object and collects the runtime information
  *
  * @param {Object} meta
+ * @returns {Object} data - Parsed metadata for the ember object
+ * @returns {String[]} data.computedProperties - list of computed properties
+ * @returns {String[]} data.observedProperties - list of observed properties
+ * @returns {Object} data.observerProperties - list of observer properties
+ * @returns {Object} data.offProperties - list of observer properties
+ * @returns {String[]} data.overriddenActions - list of overridden actions
+ * @returns {String[]} data.overriddenProperties - list of overridden properties
+ * @returns {String[]} data.ownProperties - list of object's own properties
+ * @returns {String} data.type - type of ember object
+ * @returns {Object} data.unobservedProperties - list of unobserved properties
  */
 function parseMeta(meta = {}) {
   if (!meta || !meta.source) {
@@ -74,13 +88,19 @@ function parseMeta(meta = {}) {
   const type = getType(source);
 
   const ownProperties = Object.keys(source).filter(
-    key => !["_super", "init"].includes(key)
+    key => !["_super", "init", "actions"].includes(key)
   );
+
+  const ownActions = source.actions ? Object.keys(source.actions) : [];
 
   const observedProperties = Object.keys(meta._watching || {});
 
   const overriddenProperties = ownProperties.filter(key =>
     isOverridden(meta.parent, key)
+  );
+
+  const overriddenActions = ownActions.filter(key =>
+    isActionOverridden(meta.parent, key)
   );
 
   const computedProperties = [];
@@ -92,17 +112,17 @@ function parseMeta(meta = {}) {
 
   const { offProperties, unobservedProperties } = ownProperties.reduce(
     ({ offProperties, unobservedProperties }, key) => {
-      const type = getListenerType(meta.parent, key);
+      const { type, events } = getListenerData(meta.parent, key);
       if (type === "event") {
-        offProperties.push(key);
+        offProperties[key] = events;
       } else if (type === "observer") {
-        unobservedProperties.push(key);
+        unobservedProperties[key] = events;
       }
       return { offProperties, unobservedProperties };
     },
     {
-      offProperties: [],
-      unobservedProperties: []
+      offProperties: {},
+      unobservedProperties: {}
     }
   );
 
@@ -117,6 +137,7 @@ function parseMeta(meta = {}) {
     observedProperties,
     observerProperties,
     offProperties,
+    overriddenActions,
     overriddenProperties,
     ownProperties,
     type,
@@ -129,55 +150,35 @@ function parseMeta(meta = {}) {
  *
  * @param {Ember.meta} map
  * @param {String} key
+ * @returns {Object} meta - The listener meta data
+ * @returns {String} meta.type - Type of listener can be observer|event
+ * @returns {String[]} meta.events - name of events/properties the listener is registered on
  */
-function getListenerType(map, key) {
+function getListenerData(map, key) {
   while (map) {
-    const [event] =
-      parseListeners(map._listeners).find(([, , method]) => method === key) ||
-      [];
-    if (event) {
-      return event.indexOf(":") === -1 ? "event" : "observer";
-    }
-    map = map.parent;
-  }
-}
-
-/**
- * Returns true if key is observed in parent
- *
- * @param {Ember.meta} map
- * @param {String} key
- */
-function isObservedInParent(map, key) {
-  while (map) {
-    const isObserved = parseListeners(map._listeners).some(
-      ([event, , method]) => method === key && event.indexOf(":") !== -1
+    let type = "event";
+    const events = parseListeners(map._listeners).reduce(
+      (acc, [event, , method]) => {
+        if (method === key) {
+          const [observedProp, observerEvent] = event.split(":");
+          if (observerEvent) {
+            type = "observer";
+          }
+          acc.push(observedProp);
+        }
+        return acc;
+      },
+      []
     );
-    if (isObserved) {
-      return true;
+    if (events.length) {
+      return {
+        type,
+        events
+      };
     }
     map = map.parent;
   }
-  return false;
-}
-
-/**
- * Returns true if key is listening to an event in parent
- *
- * @param {Ember.meta} map
- * @param {String} key
- */
-function isEventListenerInParent(map, key) {
-  while (map) {
-    const isObserved = parseListeners(map._listeners).some(
-      ([event, , method]) => method === key && event.indexOf(":") === -1
-    );
-    if (isObserved) {
-      return true;
-    }
-    map = map.parent;
-  }
-  return false;
+  return {};
 }
 
 /**
@@ -185,12 +186,24 @@ function isEventListenerInParent(map, key) {
  *
  * @param {Array} listeners
  * @param {int} size
+ * @returns Array
  */
 function parseListeners(listeners = [], size = 4) {
   var result = [];
-  const input = listeners.slice(0);
-  while (input.length) {
-    result.push(input.splice(0, size));
+  if (listeners.length) {
+    if (typeof listeners[0] === "object") {
+      result = listeners.map(({ event, target, method, kind }) => [
+        event,
+        target,
+        method,
+        kind
+      ]);
+    } else {
+      const input = listeners.slice(0);
+      while (input.length) {
+        result.push(input.splice(0, size));
+      }
+    }
   }
   return result;
 }
@@ -200,6 +213,7 @@ function parseListeners(listeners = [], size = 4) {
  *
  * @param {Object} map
  * @param {String} key
+ * @returns boolean
  */
 function isOverridden(map, key) {
   while (map) {
@@ -212,13 +226,33 @@ function isOverridden(map, key) {
   return false;
 }
 
+/**
+ * Checks if passed key is overriding any value from the parent objects' actions
+ *
+ * @param {Object} map
+ * @param {String} key
+ * @returns boolean
+ */
+function isActionOverridden(map, key) {
+  while (map) {
+    const { source } = map;
+    if (source) {
+      const { actions } = source;
+      const value = actions ? actions[key] : undefined;
+      if (value !== undefined) {
+        return true;
+      }
+    }
+    map = map.parent;
+  }
+  return false;
+}
+
 export {
   extract,
   getType,
   parseMeta,
   isOverridden,
   parseListeners,
-  getListenerType,
-  isObservedInParent,
-  isEventListenerInParent
+  getListenerData
 };
