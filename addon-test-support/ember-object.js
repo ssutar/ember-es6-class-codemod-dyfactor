@@ -26,18 +26,22 @@ function extract() {
     const entry = entries[modulePath];
     const state = entry ? entry.state : "";
     if (state === "new") {
-      const module = require(modulePath);
-      if (
-        module &&
-        module.default &&
-        module.default.proto &&
-        module[DYFACTOR_BASE_PATH]
-      ) {
-        const defaultProto = module.default.proto();
-        const dyBasePath = module[DYFACTOR_BASE_PATH];
-        window.__dyfactor_telemetry[dyBasePath] = parseMeta(
-          Ember.meta(defaultProto)
-        );
+      try {
+        const module = require(modulePath);
+        if (
+          module &&
+          module.default &&
+          module.default.proto &&
+          module[DYFACTOR_BASE_PATH]
+        ) {
+          const defaultProto = module.default.proto();
+          const dyBasePath = module[DYFACTOR_BASE_PATH];
+          window.__dyfactor_telemetry[dyBasePath] = parseMeta(
+            Ember.meta(defaultProto)
+          );
+        }
+      } catch (e) {
+        // Ignore error as it happens only for vendor modules
       }
     }
   });
