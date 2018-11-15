@@ -3144,10 +3144,10 @@ duplexer3@^0.1.4:
   resolved "https://registry.yarnpkg.com/duplexer3/-/duplexer3-0.1.4.tgz#ee01dd1cac0ed3cbc7fdbea37dc0a8f1ce002ce2"
   integrity sha1-7gHdHKwO08vH/b6jfcCo8c4ALOI=
 
-dyfactor@^0.4.0:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/dyfactor/-/dyfactor-0.4.1.tgz#2e7b035dba49e44769a6a9e776bb897d01e43334"
-  integrity sha512-a35DutN4gNAUPINJOzg9UyS5EuocRKLYdq+I3fOQaz22Sla7muRYzEmAWdNjMPVkJ0Nkcw0jX4KKMaDNvPDqFg==
+dyfactor@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.yarnpkg.com/dyfactor/-/dyfactor-0.4.2.tgz#dafb942f00c15e9d82d7afa0c1bbfd2339fa1ed4"
+  integrity sha512-MM1IK2g8Oci7VY0hOZoS9683AV/jlGeVdb1VqJQvfL1PpOP1UW6mcuaQAFdlgtMDHARflAb+glCLWV9zUGkq1g==
   dependencies:
     "@glimmer/syntax" "^0.34.2"
     "@types/babel-core" "^6.25.3"
