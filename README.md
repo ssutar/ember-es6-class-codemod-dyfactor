@@ -1,22 +1,78 @@
 ember-es6-class-codemod-dyfactor
 ==============================================================================
 
-[Short description of the addon.]
+The ember-es6-class-codemod-dyfactor is a dyfactor plugin to extract the data about ember objects like Routes, Components, Controllers etc.
+
+It is written with ember es6 codemods as primary use case but can be extended to be used for multiple use cases. 
 
 Installation
 ------------------------------------------------------------------------------
 
 ```
+yarn add ember-es6-class-codemod-dyfactor --dev
+```
+or
+```
 ember install ember-es6-class-codemod-dyfactor
 ```
-
 
 Usage
 ------------------------------------------------------------------------------
 
-[Longer description of how to use the addon in apps.]
+After installation, a little configuration is needed:
 
+1. In your `test-helper.js` import the `extract` utility from the `ember-es6-class-codemod-dyfactor`
+```
+import { extract } from "ember-es6-class-codemod-dyfactor/test-support/ember-object";
+```
+2. Call the extract utility before your tests are run.
+```
+// ... Other imports
+import { extract } from "ember-es6-class-codemod-dyfactor/test-support/ember-object";
+import { start } from "ember-qunit";
 
+// ..... Other test helper code, setting up application, preloading assets etc
+
+extract();
+start();
+
+```
+3. Initialize the dyfactor using `yarn dyfactor init`, configure the navigation in `.dyfactor.json` to visit the tests page
+4. Run the plugin - using 
+```
+yarn dyfactor run template ember-object path/to/files --level extract
+```
+
+Runtime Data
+------------------------------------------------------------------------------
+
+The plugin extracts the runtime data and dumps into `dyfactor-telemetry.json` indexed with `absolute file path`. Following is the example runtime data:
+
+```
+{
+  "data": [
+    {
+      "/home/user/workspace/ember-app/app/components/list-filter.js": {
+        "computedProperties": ['computedProp1', ...],
+        "observedProperties": ['observedProp1', ...],
+        "observerProperties": {
+          "observerProp1": ["prop1", "prop2", ...]
+        },
+        "offProperties": {
+          "offProp": ["prop3", ...]
+        },
+        "overriddenActions": ["overriddenAction1", ...],
+        "overriddenProperties": ["overriddenProp1"],
+        "ownProperties": ["prop1", ...],
+        "type": "Component|Route|Controller|EmberObject",
+        "unobservedProperties": {
+          "unobservedProp1": ["prop1", ...]
+        }
+      }
+    }
+  ]
+}
+```
 Contributing
 ------------------------------------------------------------------------------
 
