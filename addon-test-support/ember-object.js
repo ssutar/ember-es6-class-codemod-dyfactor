@@ -92,7 +92,7 @@ function parseMeta(meta = {}) {
   const type = getType(source);
 
   const ownProperties = Object.keys(source).filter(
-    key => !["_super", "init", "actions"].includes(key)
+    key => !["_super", "actions"].includes(key)
   );
 
   const ownActions = source.actions ? Object.keys(source.actions) : [];

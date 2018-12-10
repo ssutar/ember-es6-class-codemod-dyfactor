@@ -99,7 +99,7 @@ const mockEmberObjectParsedMeta = {
     onLogError: ["logError"]
   },
   overriddenActions: ["handleFilterEntry"],
-  overriddenProperties: ["onLogError", "product", "getAddition"],
+  overriddenProperties: ["onLogError", "product", "init", "getAddition"],
   ownProperties: [
     "onLogError",
     "getDifference",
@@ -107,6 +107,7 @@ const mockEmberObjectParsedMeta = {
     "filterProp",
     "product",
     "difference",
+    "init",
     "getAddition"
   ],
   type: "EmberObject",
