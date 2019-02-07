@@ -1,9 +1,9 @@
 ember-es6-class-codemod-dyfactor
 ==============================================================================
 
-The ember-es6-class-codemod-dyfactor is a dyfactor plugin to extract the data about ember objects like Routes, Components, Controllers etc.
+The ember-es6-class-codemod-dyfactor is a [dyfactor](https://github.com/dyfactor/dyfactor) plugin to extract the data about ember objects like Routes, Components, Controllers etc. It is written with [ember es6 codemods](https://github.com/ember-codemods/ember-es6-class-codemod) as primary use case but can be extended to be used for multiple use cases.  
 
-It is written with ember es6 codemods as primary use case but can be extended to be used for multiple use cases. 
+It uses [Dyfactor](https://github.com/dyfactor/dyfactor) - a plugin runner system, which allows you to collect the runtime information about the code. See the [documentation](https://github.com/dyfactor/dyfactor#usage) for more information about dyfactor
 
 Installation
 ------------------------------------------------------------------------------
