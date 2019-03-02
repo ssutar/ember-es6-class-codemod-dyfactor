@@ -3,6 +3,7 @@ import { sum } from "@ember/object/computed";
 import EmberObject, { computed, observer } from "@ember/object";
 import { on } from "@ember/object/evented";
 import Mixin from "@ember/object/mixin";
+import { inject as service } from "@ember/service";
 
 // MIXINS
 const LogMixin = Mixin.create({
@@ -71,6 +72,11 @@ const mockEmberObject = Base.extend(DifferenceMixin, {
   value: "",
   filterProp: 5,
   product: "",
+  maps: service(),
+
+  ratio1: computed("number1", "number2", function() {
+    return this.number1 / this.number2;
+  }),
 
   difference: observer("number1", "number2", function() {
     return this.number1 - this.number2;
@@ -90,7 +96,7 @@ const mockEmberObject = Base.extend(DifferenceMixin, {
 });
 
 const mockEmberObjectParsedMeta = {
-  computedProperties: [],
+  computedProperties: ["ratio1"],
   observedProperties: ["number1", "number2"],
   observerProperties: {
     difference: ["number1", "number2"]
@@ -106,6 +112,8 @@ const mockEmberObjectParsedMeta = {
     "value",
     "filterProp",
     "product",
+    "maps",
+    "ratio1",
     "difference",
     "init",
     "getAddition"

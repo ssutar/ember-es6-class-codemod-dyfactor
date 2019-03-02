@@ -109,7 +109,15 @@ function parseMeta(meta = {}) {
 
   const computedProperties = [];
   meta.forEachDescriptors((name, desc) => {
-    if (desc.enumerable && ownProperties.includes(name)) {
+    const descProto = Object.getPrototypeOf(desc) || {};
+    const constructorName = descProto.constructor
+      ? descProto.constructor.name
+      : "";
+    if (
+      desc.enumerable &&
+      ownProperties.includes(name) &&
+      constructorName === "ComputedProperty"
+    ) {
       computedProperties.push(name);
     }
   });
